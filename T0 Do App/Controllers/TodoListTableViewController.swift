@@ -10,27 +10,30 @@ import UIKit
 
 class TodoListTableViewController: UITableViewController {
     
-    var items = [Item]()
+    // Get file path
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
-    // Persist data using userDefault
-    let defaults = UserDefaults.standard
+    var items = [Item]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let item1 = Item(title: "Buy milk")
-        let item2 = Item(title: "Do more programming")
-        let item3 = Item(title: "Go to London")
-        let items4 = Item(title: "Be focus!!!")
-        let items5 = Item(title: "Get my comp sci degree", done: true)
+        //print(dataFilePath!)
         
+//        let item1 = Item(title: "Buy milk")
+//        let item2 = Item(title: "Do more programming")
+//        let item3 = Item(title: "Go to London")
+//        let items4 = Item(title: "Be focus!!!")
+//        let items5 = Item(title: "Get my comp sci degree", done: true)
+//        
+//        
+//        items += [item1, item2, item3, items4, items5]
         
-        items += [item1, item2, item3, items4, items5]
+        loadItems()
         
-        
-        if let itemsList = defaults.array(forKey: "ToDoList") as? [Item] {
-            items = itemsList
-        }
+//        if let itemsList = defaults.array(forKey: "ToDoList") as? [Item] {
+//            items = itemsList
+//        }
 
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
@@ -66,40 +69,6 @@ class TodoListTableViewController: UITableViewController {
         return cell
     }
 
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
     
     //MARK: - TableView Delegate
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -107,8 +76,7 @@ class TodoListTableViewController: UITableViewController {
         
         items[indexPath.row].done = !items[indexPath.row].done
         
-        
-        tableView.reloadData()
+        saveItems()
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
@@ -123,9 +91,7 @@ class TodoListTableViewController: UITableViewController {
             
             self.items.append(Item(title: textField.text!))
             
-            self.defaults.set(self.items, forKey: "ToDoList")
-            
-            self.tableView.reloadData()
+            self.saveItems()
         }
         
         alert.addTextField { (alertTextField) in
@@ -138,6 +104,66 @@ class TodoListTableViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    //MARK: - Model Manupulation Methods
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(items)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding items. \(error)")
+        }
+        
+        self.tableView.reloadData()
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+               items = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding item array, \(error)")
+            }
+            
+        }
+    }
+    
+    /*
+     // Override to support conditional editing of the table view.
+     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+     // Return false if you do not want the specified item to be editable.
+     return true
+     }
+     */
+    
+    /*
+     // Override to support editing the table view.
+     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+     if editingStyle == .delete {
+     // Delete the row from the data source
+     tableView.deleteRows(at: [indexPath], with: .fade)
+     } else if editingStyle == .insert {
+     // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+     }
+     }
+     */
+    
+    /*
+     // Override to support rearranging the table view.
+     override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
+     
+     }
+     */
+    
+    /*
+     // Override to support conditional rearranging of the table view.
+     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+     // Return false if you do not want the item to be re-orderable.
+     return true
+     }
+     */
 
     /*
     // MARK: - Navigation
